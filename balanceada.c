@@ -3,28 +3,31 @@
 #include "Pilha.h"
 
 bool balanceada(char *sequencia) {
+    bool isBalanceada = true;
     PILHA *pilhaAux = pilha_criar(); //criacao da pilha que armazena a sequencia
 
-    for(unsigned int i = 0; sequencia[i] != '\0' ; ++i) { //laco para cada elemento da sequencia
+    //laco para cada elemento da sequencia
+    for(unsigned int i = 0; sequencia[i] != '\0' ; ++i) { 
         if(sequencia[i] == '{' || sequencia[i] == '[' || sequencia[i] == '(') //se o caractere simbolizar uma abertura, ele é empilhado
             pilha_empilhar(pilhaAux, item_criar(sequencia[i]));
-        else  //caso contrario, ele deve corresponder ao ultimo caractere aberto
+        else { //caso contrario, ele deve corresponder ao ultimo caractere aberto
             
             /*Solução elementar
-
-            switch( item_get_chave(pilha_desempilhar(pilhaAux)) ) {
+            ITEM *itemAux = pilha_desempilhar(pilhaAux);
+            switch( item_get_chave(itemAux) ) {
                 case '{':
-                    if (sequencia[i] != '}') return false;
+                    if (sequencia[i] != '}') isBalanceada = false;
                     break;
                 case '[':
-                    if (sequencia[i] != ']') return false;
+                    if (sequencia[i] != ']') isBalanceada = false;
                     break;
                 case '(':
-                    if (sequencia[i] != ')') return false;
+                    if (sequencia[i] != ')') isBalanceada = false;
                     break;
                 default: 
-                    return false;
+                    isBalanceada = false
             }
+            item_apagar(&itemAux);
             */
 
             /* Analogamente, por meior dos valores da tabela ASCII para cada caractere de abertura e seu correspondente fechamento:
@@ -35,11 +38,31 @@ bool balanceada(char *sequencia) {
 
                 assim:
             */
-           if( (sequencia[i] - 1) != (item_get_chave(pilha_desempilhar(pilhaAux)) + item_get_chave(pilha_desempilhar(pilhaAux)) % 2) )
-            return false;
+
+            ITEM *itemAux = pilha_desempilhar(pilhaAux);
+            if( (sequencia[i] - 1) != (item_get_chave(itemAux) + itemAux % 2) )
+                isBalanceada = false;
+            item_apagar(&itemAux);
+
+            if(!isBalanceada) { //caso seja descoberto que a sequencia não esta balanceada em alguma iteraçao
+                while(!pilha_vazia(pilhaAux)) {
+                    item_apagar(&pilha_desempilhar(pilhaAux));
+                }
+                pilha_apagar(&pilhaAux);
+                return false;
+            }
+        }
     }
 
     //se todos os caracteres abertos foram fechados e se todos os caracteres corresponderam a caracteres abertos, a sequencia está balanceada
-    if(pilha_vazia(pilhaAux))
+    if(pilha_vazia(pilhaAux)) {
+        pilha_apagar(&pilhaAux);
         return true;
+    } else { //caso contrario, caracteres abertos nao foram fechados, sequencia nao balanceada
+        while(!pilha_vazia(pilhaAux)) {
+            item_apagar(&pilha_desempilhar(pilhaAux));
+        }
+        pilha_apagar(&pilhaAux);
+        return false;
+    }
 }
